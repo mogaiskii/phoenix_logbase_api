@@ -16,7 +16,7 @@ defmodule PhoenixLogbaseApiWeb.ApiResponseBuilder do
 
   # Builds a basic response with a code and optional data.
   # links is a required parameter to ensure that all responses include HATEOAS links, even if they are empty.
-  defp build_response(links, data \\ nil, code \\ 0) do
+  defp build_response(links, data, code \\ 0) do
     response = %{code: code, links: build_links(links)}
 
     if data do
@@ -64,6 +64,6 @@ defmodule PhoenixLogbaseApiWeb.ApiResponseBuilder do
           optional(:response) => any()
         }
   def build_error(code \\ 500, errors, links) when is_list(errors) do
-    Map.put(build_response(links, code: code), :errors, errors)
+    Map.put(build_response(links, nil, code), :errors, errors)
   end
 end

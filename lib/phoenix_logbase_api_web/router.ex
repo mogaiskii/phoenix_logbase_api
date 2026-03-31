@@ -1,5 +1,11 @@
 defmodule PhoenixLogbaseApiWeb.Router do
   use PhoenixLogbaseApiWeb, :router
+  use Plug.ErrorHandler
+
+  @impl Plug.ErrorHandler
+  def handle_errors(conn, _) do
+    json(conn, PhoenixLogbaseApiWeb.ErrorJSON.render("500.json", %{self: conn.request_path || ""}))
+  end
 
   pipeline :api do
     plug :accepts, ["json"]
