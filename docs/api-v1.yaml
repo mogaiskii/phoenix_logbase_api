@@ -1,0 +1,379 @@
+openapi: 3.1.0
+info:
+  title: Swagger Petstore - OpenAPI 3.1
+  version: 1.0.0
+servers:
+  - url: https://petstore31.swagger.io/api/v3
+tags:
+  - name: user
+    description: Operations about user
+paths:
+  /user:
+    put:
+      tags:
+        - user
+      summary: Update own user.
+      description: This can only be done by the logged in user.
+      operationId: updateOwnUser
+      security: 
+        - api_token: []
+      requestBody:
+        description: Update an existent user in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiUserResponse"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    post:
+      tags:
+        - user
+      summary: Create user.
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      security: 
+        - api_token: []
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiUserResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /user/login:
+    post:
+      tags:
+        - user
+      summary: Logs user into the system.
+      description: log user into the system.
+      operationId: loginUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+      responses:
+        '200':
+          description: successful operation
+          headers:
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiLoginResponse'
+        '400':
+          description: Invalid username/password supplied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /user/login/refresh:
+    post:
+      tags:
+        - user
+      summary: Refreshes user api token.
+      description: refresh user token into the system.
+      operationId: refreshUserToken
+      security: 
+        - api_token: []
+      responses:
+        '200':
+          description: successful operation
+          headers:
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiLoginResponse'
+        '400':
+          description: Invalid username/password supplied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /user/logout:
+    post:
+      tags:
+        - user
+      summary: Logs out current logged in user session.
+      description: Log user out of system.
+      operationId: logoutUser
+      security: 
+        - api_token: []
+      parameters: []
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /user/{id}:
+    get:
+      tags:
+        - user
+      summary: Get user by user id.
+      description: Get user details based on id.
+      operationId: getUserById
+      security: 
+        - api_token: []
+      parameters:
+        - name: id
+          in: path
+          description: The name that needs to be fetched.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiUserResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    put:
+      tags:
+        - user
+      summary: Update user.
+      operationId: updateUser
+      security: 
+        - api_token: []
+      parameters:
+        - name: id
+          in: path
+          description: name that need to be deleted
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Update an existent user in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiUserResponse'
+      responses:
+        '200':
+          description: successful operation
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      tags:
+        - user
+      summary: Delete user.
+      description: This can only be done by the logged in user.
+      operationId: deleteUser
+      security: 
+        - api_token: []
+      parameters:
+        - name: id
+          in: path
+          description: The name that needs to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+components:
+  schemas:
+    Login:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          examples: ["username"]
+        password:
+          type: string
+          examples: ["password"]
+    ApiLoginResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          required: [response]
+          properties:
+            response:
+              type: object
+              required: [token, refreshToken, user]
+              properties:
+                token:
+                  type: string
+                refreshToken:
+                  type: string
+                user:
+                  $ref: "#/components/schemas/User"
+            links:
+              type: object
+              required: [self, user]
+              properties:
+                self:
+                  type: string
+                  examples: ["http://localhost/self"]
+                user:
+                  type: string
+                  examples: ["http://localhost/user"]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        username:
+          type: string
+          examples: [theUser]
+        password:
+          type: string
+          examples: [theUserPassword]
+          writeOnly: true
+    ApiUserResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          required: [response]
+          properties:
+            response:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  $ref: "#/components/schemas/User"
+            links:
+              type: object
+              required: [self, user]
+              properties:
+                self:
+                  type: string
+                  examples: ["http://localhost/self"]
+                user:
+                  type: string
+                  examples: ["http://localhost/user"]
+
+    ApiResponse:
+      type: object
+      required: [code, links]
+      properties:
+        response:
+          type: object
+        code:
+          type: integer
+          format: int32
+        links:
+          type: object
+          required: [self]
+          properties:
+            self:
+              type: string
+              examples: ["http://localhost/self"]
+            next:
+              type: string
+              examples: ["http://localhost/next"]
+            prev:
+              type: string
+              examples: ["http://localhost/prev"]
+    ApiError:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          required: [errors]
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                required: [code, message]
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                  message:
+                    type: string
+
+  securitySchemes:
+    api_token:
+      type: apiKey
+      name: Authorization
+      in: header
