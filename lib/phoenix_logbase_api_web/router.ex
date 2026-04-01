@@ -1,11 +1,10 @@
 defmodule PhoenixLogbaseApiWeb.Router do
   use PhoenixLogbaseApiWeb, :router
   use Plug.ErrorHandler
+  alias PhoenixLogbaseApiWeb.ApiErrorHandler
 
   @impl Plug.ErrorHandler
-  def handle_errors(conn, _) do
-    json(conn, PhoenixLogbaseApiWeb.ErrorJSON.render("500.json", %{self: conn.request_path || ""}))
-  end
+  def handle_errors(conn, opts), do: ApiErrorHandler.handle_errors(conn, opts)
 
   pipeline :api do
     plug :accepts, ["json"]
@@ -33,4 +32,6 @@ defmodule PhoenixLogbaseApiWeb.Router do
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
+
+  match :*, "/*path", PhoenixLogbaseApiWeb.NoRouteController, :not_found
 end
