@@ -9,7 +9,7 @@ import Config
 
 config :phoenix_logbase_api,
   ecto_repos: [PhoenixLogbaseApi.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime, api_prefix: "/api/v1", binary_id: true]
 
 # Configure the endpoint
 config :phoenix_logbase_api, PhoenixLogbaseApiWeb.Endpoint,
@@ -19,6 +19,9 @@ config :phoenix_logbase_api, PhoenixLogbaseApiWeb.Endpoint,
     formats: [json: PhoenixLogbaseApiWeb.ErrorJSON],
     layout: false
   ]
+
+config :phoenix_logbase_api, PhoenixLogbaseApi.Repo,
+  migration_primary_key: [type: :uuid]
 
 # Configure Elixir's Logger
 config :logger, :default_formatter,

@@ -1,19 +1,34 @@
 defmodule PhoenixLogbaseApiWeb.Router do
   use PhoenixLogbaseApiWeb, :router
   use Plug.ErrorHandler
-  alias PhoenixLogbaseApiWeb.ApiErrorHandler
+  alias PhoenixLogbaseApiWeb.FallbackController
 
   @impl Plug.ErrorHandler
-  def handle_errors(conn, opts), do: ApiErrorHandler.handle_errors(conn, opts)
+  def handle_errors(conn, opts), do: FallbackController.handle_errors(conn, opts)
 
   pipeline :api do
     plug :accepts, ["json"]
     plug PhoenixLogbaseApiWeb.EnsureSelf
   end
 
+  pipeline :authorize do
+
+  end
+
   scope "/api", PhoenixLogbaseApiWeb do
     pipe_through :api
+
     get "/ping", PingController, :ping
+    # post "/v1/auth/login", AuthController, :login
+
+    scope "/v1" do
+      pipe_through :authorize
+
+      scope "/users" do
+        resources "/", UserController, except: [:new, :edit]
+
+      end
+    end
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
@@ -33,5 +48,5 @@ defmodule PhoenixLogbaseApiWeb.Router do
     end
   end
 
-  match :*, "/*path", PhoenixLogbaseApiWeb.NoRouteController, :not_found
+  match :*, "/*path", PhoenixLogbaseApiWeb.FallbackController, :route_not_found
 end

@@ -17,10 +17,19 @@ defmodule PhoenixLogbaseApiWeb.ErrorJSON do
   # "Not Found".
   import PhoenixLogbaseApiWeb.ApiResponseBuilder, only: [build_error: 3]
 
-  def render(template, %{self: self, code: code}) when is_bitstring(self), do: build_error(code, [Phoenix.Controller.status_message_from_template(template)], self)
+  def render(_template, %{code: code, errors: errors, self: self}) when is_integer(code) and is_list(errors) and is_bitstring(self) do
+    build_error(code, errors, self)
+  end
 
-  def render(template, %{self: self}) when is_bitstring(self), do: build_error(500, [Phoenix.Controller.status_message_from_template(template)], self)
+  def render(template, _assigns), do: build_error(status_code_from_template(template), [Phoenix.Controller.status_message_from_template(template)], "")  # empty string here, as we cannot access the request context to build links in this error renderer
 
-  def render(template, _assigns), do: build_error(500, [Phoenix.Controller.status_message_from_template(template)], "")  # empty string here, as we cannot access the request context to build links in this error renderer
+  defp status_code_from_template(template) do
+    template
+    |> String.split(".")
+    |> hd()
+    |> String.to_integer()
+  rescue
+    _ -> 500
+  end
 
 end
