@@ -3,6 +3,7 @@ defmodule PhoenixLogbaseApi.AccountsTest do
 
   alias PhoenixLogbaseApi.Accounts
 
+
   describe "users" do
     alias PhoenixLogbaseApi.Accounts.User
 
@@ -60,4 +61,5 @@ defmodule PhoenixLogbaseApi.AccountsTest do
       assert %Ecto.Changeset{} = Accounts.change_user(user)
     end
   end
+
 end

@@ -6,8 +6,10 @@ defmodule PhoenixLogbaseApi.Accounts.User do
   @foreign_key_type :binary_id
   schema "users" do
     field :username, :string
-    field :email, :string, redact: true
-    field :password_hash, :string
+    field :email, :string
+    field :password_hash, :string, redact: true
+    field :totp_secret, :string, redact: true
+    field :totp_enabled, :boolean, default: false
 
     timestamps(type: :utc_datetime)
   end
@@ -18,13 +20,15 @@ defmodule PhoenixLogbaseApi.Accounts.User do
     email: String.t(),
     password_hash: String.t(),
     inserted_at: DateTime.t(),
-    updated_at: DateTime.t()
+    updated_at: DateTime.t(),
+    totp_secret: String.t() | nil,
+    totp_enabled: boolean()
   }
 
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :email, :password_hash])
+    |> cast(attrs, [:username, :email, :password_hash, :totp_secret, :totp_enabled])
     |> validate_required([:username, :email, :password_hash])
   end
 end

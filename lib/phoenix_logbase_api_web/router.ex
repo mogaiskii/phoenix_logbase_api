@@ -27,8 +27,10 @@ defmodule PhoenixLogbaseApiWeb.Router do
       pipe_through :authorize
 
       scope "/users" do
+        post "/totp", UserController, :totp_request
+        post "/totp/confirm", UserController, :totp_confirm
+        delete "/totp", UserController, :totp_remove
         resources "/", UserController, except: [:new, :edit]
-
       end
     end
   end

@@ -17,6 +17,18 @@ defmodule PhoenixLogbaseApiWeb.UserJSON do
     build_success(%{user: data(user)}, links)
   end
 
+  def totp_request(%{url: url, links: links}) do
+    build_success(%{totp_link: url}, links)
+  end
+
+  def totp_confirm(%{links: links}) do
+    build_success(%{}, links)
+  end
+
+  def totp_remove(%{links: links}) do
+    build_success(%{}, links)
+  end
+
   def data(%User{} = user) do
     %{
       id: user.id,

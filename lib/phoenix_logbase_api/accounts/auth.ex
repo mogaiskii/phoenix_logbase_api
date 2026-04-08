@@ -6,7 +6,7 @@ defmodule PhoenixLogbaseApi.Accounts.Auth do
   @doc """
   Authenticates a user by username and password.
   """
-  @spec authenticate_user(binary(), any()) :: {:error, :invalid_password} | {:ok, PhoenixLogbaseApi.Accounts.User.t()}
+  @spec authenticate_user(binary(), binary()) :: {:error, :invalid_password} | {:ok, PhoenixLogbaseApi.Accounts.User.t()}
   def authenticate_user(username, password) do
     user = get_user_by_username(username)
 
@@ -38,13 +38,18 @@ defmodule PhoenixLogbaseApi.Accounts.Auth do
     end
   end
 
+  def get_user_from_verified_token(conn) do
+    PhoenixLogbaseApi.Guardian.Plug.current_claims(conn)
+    |> PhoenixLogbaseApi.Guardian.resource_from_claims()
+  end
+
   def generate_token(user) do
     {:ok, token, _claims} = encode_and_sign(user)
     token
   end
 
   def generate_refresh_token(user) do
-    {:ok, token, _claims} = encode_and_sign(user, %{}, token_type: "refresh", ttl: {Application.get_env(:phoenix_logbase_api, __MODULE__)[:refresh_token_expiry], :seconds})
+    {:ok, token, _claims} = encode_and_sign(user, %{}, token_type: "refresh", ttl: Application.get_env(:phoenix_logbase_api, __MODULE__)[:refresh_token_expiry])
     token
   end
 
@@ -57,5 +62,17 @@ defmodule PhoenixLogbaseApi.Accounts.Auth do
       {:ok, {_old_token, _old_claims}, {new_token, _new_claims}} -> {:ok, new_token}
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  def generate_totp_secret() do
+    secret = NimbleTOTP.secret()
+    issuer = Application.get_env(:phoenix_logbase_api, __MODULE__)[:issuer]
+    url = NimbleTOTP.otpauth_uri(issuer, secret, issuer: issuer)
+    {:ok, Base.encode32(secret), url}
+  end
+
+  @spec verify_totp(PhoenixLogbaseApi.Accounts.User.t(), binary()) :: boolean()
+  def verify_totp(%{totp_secret: secret}, token) do
+    NimbleTOTP.valid?(Base.decode32!(secret), token)
   end
 end

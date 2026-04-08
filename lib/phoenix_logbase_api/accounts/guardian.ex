@@ -9,6 +9,7 @@ defmodule PhoenixLogbaseApi.Guardian do
     {:ok, sub}
   end
 
+  @spec resource_from_claims(nil | maybe_improper_list() | map()) :: {:ok, PhoenixLogbaseApi.Accounts.User.t()} | {:error, atom()}
   def resource_from_claims(claims) do
     # You can retrieve the user from the claims and return it
     id = claims["sub"]

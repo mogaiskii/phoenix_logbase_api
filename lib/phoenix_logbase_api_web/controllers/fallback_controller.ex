@@ -13,12 +13,10 @@ defmodule PhoenixLogbaseApiWeb.FallbackController do
     render_errors(conn, ErrorTypes.validation_error(), [changeset_error(changeset)])
   end
 
-  def call(conn, {:error, :not_found}), do: render_errors(conn, ErrorTypes.not_found())
   def call(conn, {:error, %Ecto.NoResultsError{}}), do: render_errors(conn, ErrorTypes.not_found())
 
   def call(conn, {:error, :invalid_token_type}), do: render_errors(conn, ErrorTypes.invalid_token())
-  def call(conn, {:error, :invalid_token}), do: render_errors(conn, ErrorTypes.invalid_token())
-  def call(conn, {:error, :invalid_password}), do: render_errors(conn, ErrorTypes.invalid_password())
+  def call(conn, {:error, error}) when is_atom(error), do: render_errors(conn, resolve_error(error))
 
   def call(conn, _opts), do: render_errors(conn, ErrorTypes.unexpected_error())
 
@@ -29,6 +27,13 @@ defmodule PhoenixLogbaseApiWeb.FallbackController do
   def handle_errors(conn, _opts), do: render_errors(conn, ErrorTypes.unexpected_error())
 
   def route_not_found(conn), do: render_errors(conn, ErrorTypes.not_found())
+
+  defp resolve_error(error) when is_atom(error) do
+    case ErrorTypes.implemented?(error) do
+      true  -> apply(ErrorTypes, error, [])
+      false -> ErrorTypes.unexpected_error()
+    end
+  end
 
   defp render_errors(conn, api_error, errors \\ nil) do
     conn

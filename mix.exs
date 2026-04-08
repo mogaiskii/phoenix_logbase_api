@@ -56,6 +56,7 @@ defmodule PhoenixLogbaseApi.MixProject do
       {:pbkdf2_elixir, "~> 2.3.1"},
       {:guardian, "~> 2.0"},
       {:casex, "~> 0.4.2"},
+      {:nimble_totp, "~> 1.0.0"},
     ]
   end
 
