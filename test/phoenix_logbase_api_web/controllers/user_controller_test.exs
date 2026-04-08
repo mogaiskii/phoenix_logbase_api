@@ -113,6 +113,46 @@ defmodule PhoenixLogbaseApiWeb.UserControllerTest do
     end
   end
 
+  describe "show own user" do
+    test "renders user when token is valid", %{conn: conn, default_user: %User{id: id, email: email, username: username} = _default_user} do
+      conn = get(conn, ~p"/api/v1/users/me")
+      assert %{
+               "id" => ^id,
+               "email" => ^email,
+               "username" => ^username
+             } = json_response(conn, 200)["response"]["user"]
+    end
+  end
+
+  describe "update own user" do
+    test "renders updated user when token and data are valid", %{conn: conn, default_user: %User{id: id}} do
+      update_attrs = %{email: "updated email", username: "updated username"}
+      conn = put(conn, ~p"/api/v1/users/me", update_attrs)
+      assert %{
+               "id" => ^id,
+               "email" => "updated email",
+               "username" => "updated username"
+             } = json_response(conn, 200)["response"]["user"]
+
+      conn = get(conn, ~p"/api/v1/users/#{id}")
+
+      assert %{
+               "id" => ^id,
+               "email" => "updated email",
+               "username" => "updated username"
+             } = json_response(conn, 200)["response"]["user"]
+    end
+
+    test "renders errors when data is invalid", %{conn: conn} do
+      url = ~p"/api/v1/users/me"
+      conn = put(conn, url, @invalid_attrs)
+      assert %{"code" => 20000, "errors" => errors, "links" => %{"self" =>  ^url}} = json_response(conn, 400), "Status code must be 400, error code must be 20000 for validation errors, and response must contain self link to the endpoint"
+      assert Enum.count(errors) == 3, "There must be 3 validation errors for invalid username, email, and password"
+      assert Enum.sort(Enum.map(errors, & &1["path"])) == ["email", "password", "username"], "Validation errors must be for email, password, and username"
+      assert Enum.all?(errors, fn er -> er["message"] == "Type mismatch. Expected String but got Integer." end), "Validation error messages must indicate the expected type"
+    end
+  end
+
   describe "update user" do
     setup [:create_user]
 
