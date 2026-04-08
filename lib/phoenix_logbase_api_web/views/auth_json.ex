@@ -1,10 +1,9 @@
 defmodule PhoenixLogbaseApiWeb.AuthJSON do
-  alias PhoenixLogbaseApiWeb.UserJSON
-
   import PhoenixLogbaseApiWeb.ApiResponseBuilder, only: [build_success: 2]
+  import PhoenixLogbaseApiWeb.ApiUserHelper, only: [user_data: 1]
 
   def login(%{user: user, token: token, refresh_token: refresh_token, links: links}) do
-    build_success(%{user: UserJSON.data(user), token: token, refresh_token: refresh_token}, links)
+    build_success(%{user: user_data(user), token: token, refresh_token: refresh_token}, links)
   end
 
   def refresh(%{token: token, links: links}) do

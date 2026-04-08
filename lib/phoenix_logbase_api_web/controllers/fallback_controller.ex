@@ -18,6 +18,8 @@ defmodule PhoenixLogbaseApiWeb.FallbackController do
   def call(conn, {:error, :invalid_token_type}), do: render_errors(conn, ErrorTypes.invalid_token())
   def call(conn, {:error, error}) when is_atom(error), do: render_errors(conn, resolve_error(error))
 
+  def call(conn, :route_not_found), do: render_errors(conn, ErrorTypes.not_found())
+
   def call(conn, _opts), do: render_errors(conn, ErrorTypes.unexpected_error())
 
   @spec handle_errors(Plug.Conn.t(), map()) :: Plug.Conn.t()
@@ -25,8 +27,6 @@ defmodule PhoenixLogbaseApiWeb.FallbackController do
   def handle_errors(conn, %{kind: :error, reason: %{message: msg}}), do: render_errors(conn, ErrorTypes.unexpected_error(), [msg])
   def handle_errors(conn, %{kind: :throw}), do: render_errors(conn, ErrorTypes.unexpected_error())
   def handle_errors(conn, _opts), do: render_errors(conn, ErrorTypes.unexpected_error())
-
-  def route_not_found(conn), do: render_errors(conn, ErrorTypes.not_found())
 
   defp resolve_error(error) when is_atom(error) do
     case ErrorTypes.implemented?(error) do

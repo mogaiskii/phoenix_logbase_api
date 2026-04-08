@@ -5,6 +5,8 @@ defmodule PhoenixLogbaseApiWeb.AuthController do
 
   action_fallback PhoenixLogbaseApiWeb.FallbackController
 
+  import PhoenixLogbaseApiWeb.ApiResponseBuilder, only: [build_success: 2]
+
   alias PhoenixLogbaseApi.Accounts.User
   alias PhoenixLogbaseApi.Accounts.Auth
 
@@ -60,6 +62,10 @@ defmodule PhoenixLogbaseApiWeb.AuthController do
         end
       end
     end
+  end
+
+  def logout(conn, _params) do
+    json(conn, build_success(%{}, %{self: "/api/v1/auth/logout"}))
   end
 
   defp send_temp_token(conn, user) do

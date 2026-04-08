@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: Swagger Petstore - OpenAPI 3.1
+  title: Phoenix Logbase API - OpenAPI 3.1
   version: 1.0.0
 servers:
-  - url: https://petstore31.swagger.io/api/v3
+  - url: http://localhost:4000/api/v3
 tags:
   - name: auth
     description: Operations about auth
@@ -26,16 +26,16 @@ paths:
       responses:
         '200':
           description: successful operation
-          headers:
-            X-Expires-After:
-              description: date in UTC when token expires
-              schema:
-                type: string
-                format: date-time
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiLoginResponse'
+        '202':
+          description: 2FA step required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiLoginResponse2FA'
         '400':
           description: Invalid username/password supplied
           content:
@@ -48,6 +48,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /auth/login/code:
+    post:
+      tags:
+        - auth
+      summary: 2FA second step
+      description: complete authentication with TOTP
+      operationId: loginCode
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiLoginResponse'
   /auth/refresh:
     post:
       tags:
@@ -60,16 +74,10 @@ paths:
       responses:
         '200':
           description: successful operation
-          headers:
-            X-Expires-After:
-              description: date in UTC when token expires
-              schema:
-                type: string
-                format: date-time
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiLoginResponse'
+                $ref: '#/components/schemas/ApiRefreshResponse'
         '400':
           description: Invalid username/password supplied
           content:
@@ -106,33 +114,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
   /user:
-    put:
-      tags:
-        - user
-      summary: Update own user.
-      description: This can only be done by the logged in user.
-      operationId: updateOwnUser
-      security: 
-        - api_token: []
-      requestBody:
-        description: Update an existent user in the store
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiUserResponse"
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
     post:
       tags:
         - user
@@ -154,6 +135,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiUserResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /user/me:
+    get:
+      tags:
+        - user
+      summary: Get user by user id.
+      description: Get user details based on id.
+      operationId: getOwnUser
+      security: 
+        - api_token: []
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiUserResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    put:
+      tags:
+        - user
+      summary: Update own user.
+      description: This can only be done by the logged in user.
+      operationId: updateOwnUser
+      security: 
+        - api_token: []
+      requestBody:
+        description: Update an existent user in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiUserResponse"
         default:
           description: Unexpected error
           content:
@@ -296,9 +332,45 @@ components:
                 user:
                   type: string
                   examples: ["http://localhost/user"]
-
+    ApiRefreshResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          required: [response]
+          properties:
+            response:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+    ApiLoginResponse2FA:
+      allOf:
+        - $ref: "#/components/schemas/ApiResponse"
+        - type: object
+          required: [response]
+          properties:
+            response:
+              type: object
+              required: [tempToken]
+              properties:
+                tempToken:
+                  type: string
+                  description: Temporary token for completing the 2FA step only
+            links:
+              type: object
+              required: [self, next]
+              properties:
+                self:
+                  type: string
+                  examples: ["http://localhost/self"]
+                next:
+                  type: string
+                  examples: ["http://localhost/self/next"]
+                  description: in this context, the next path to be called
     User:
       type: object
+      required: [id, email, username]
       properties:
         id:
           type: string
@@ -307,10 +379,14 @@ components:
         username:
           type: string
           examples: [theUser]
+        email:
+          type: string
+          examples: [theUser]
         password:
           type: string
           examples: [theUserPassword]
           writeOnly: true
+
     ApiUserResponse:
       allOf:
         - $ref: "#/components/schemas/ApiResponse"

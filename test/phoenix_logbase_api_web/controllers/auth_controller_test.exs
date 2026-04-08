@@ -154,4 +154,18 @@ defmodule PhoenixLogbaseApiWeb.AuthControllerTest do
     end
   end
 
+  describe "logout" do
+    test "returns success response", %{conn: conn} do
+      {token, _} = auth_fixture()
+      conn = put_req_header(conn, "authorization", "Bearer #{token}") |> post(~p"/api/v1/auth/logout")
+      assert %{"code" => 0, "links" => %{"self" => "/api/v1/auth/logout"}, "response" => %{}} = json_response(conn, 200), "Status code must be 200 for successful logout and response must contain self link to the endpoint"
+    end
+
+    test "returns 401 when no token is provided", %{conn: conn} do
+      conn = post(conn, ~p"/api/v1/auth/logout")
+      assert %{"code" => 30002, "errors" => errors, "links" => %{"self" => "/api/v1/auth/logout"}} = json_response(conn, 401), "Status code must be 401 for unauthorized access, error code must be 30000 for authentication errors, and response must contain self link to the endpoint"
+      assert Enum.count(errors) == 1, "There must be exactly one error message for missing token"
+      assert Enum.at(errors, 0)["message"] == "Unauthorized", "Error message must indicate that the token is invalid when no token is provided"
+    end
+  end
 end
