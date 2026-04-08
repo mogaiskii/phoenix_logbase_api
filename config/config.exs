@@ -23,6 +23,14 @@ config :phoenix_logbase_api, PhoenixLogbaseApiWeb.Endpoint,
 config :phoenix_logbase_api, PhoenixLogbaseApi.Repo,
   migration_primary_key: [type: :uuid]
 
+config :phoenix_logbase_api, PhoenixLogbaseApi.Guardian,
+  issuer: "phoenix_logbase_api",
+  secret_key: System.get_env("API_SECRET_KEY"),
+  ttl: {1, :hour}
+
+config :phoenix_logbase_api, PhoenixLogbaseApi.Accounts.Auth,
+  refresh_token_expiry: 86400 # 24 hours in seconds
+
 # Configure Elixir's Logger
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
@@ -30,6 +38,9 @@ config :logger, :default_formatter,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+# Use Casex to encode JSON responses in camelCase
+config :phoenix, :format_encoders, json: Casex.CamelCaseEncoder
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

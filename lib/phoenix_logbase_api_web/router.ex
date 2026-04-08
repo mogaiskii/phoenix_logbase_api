@@ -9,17 +9,19 @@ defmodule PhoenixLogbaseApiWeb.Router do
   pipeline :api do
     plug :accepts, ["json"]
     plug PhoenixLogbaseApiWeb.EnsureSelf
+    plug Casex.CamelCaseDecoderPlug  # Use Casex to decode incoming JSON keys in camelCase
   end
 
   pipeline :authorize do
-
+    plug PhoenixLogbaseApiWeb.EnsureAuth
   end
 
   scope "/api", PhoenixLogbaseApiWeb do
     pipe_through :api
 
     get "/ping", PingController, :ping
-    # post "/v1/auth/login", AuthController, :login
+    post "/v1/auth/login", AuthController, :login
+    post "/v1/auth/refresh", AuthController, :refresh
 
     scope "/v1" do
       pipe_through :authorize

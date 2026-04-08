@@ -53,7 +53,9 @@ defmodule PhoenixLogbaseApi.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:ex_json_schema, "~> 0.11.2"},
-      {:pbkdf2_elixir, "~> 2.3.1"}
+      {:pbkdf2_elixir, "~> 2.3.1"},
+      {:guardian, "~> 2.0"},
+      {:casex, "~> 0.4.2"},
     ]
   end
 

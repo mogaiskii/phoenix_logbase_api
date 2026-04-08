@@ -20,6 +20,10 @@ config :phoenix_logbase_api, PhoenixLogbaseApiWeb.Endpoint,
   secret_key_base: "QKEShADTcdLwLfoz9bc5HmAWYUnIxP8HLxosiVzgtoi2moxRF5OAEMHJXSHi1GbL",
   server: false
 
+config :phoenix_logbase_api, PhoenixLogbaseApi.Guardian,
+  issuer: "phoenix_logbase_api",
+  secret_key: "luKO6tyHw3YNyOAcGzEPgvaErzNSdmyLdA6TVWkHRk-eP55zz7oKdiRJi8MNEDhO"
+
 # In test we don't send emails
 config :phoenix_logbase_api, PhoenixLogbaseApi.Mailer, adapter: Swoosh.Adapters.Test
 

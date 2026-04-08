@@ -12,6 +12,15 @@ defmodule PhoenixLogbaseApi.Accounts.User do
     timestamps(type: :utc_datetime)
   end
 
+  @type t :: %__MODULE__{
+    id: Ecto.UUID.t(),
+    username: String.t(),
+    email: String.t(),
+    password_hash: String.t(),
+    inserted_at: DateTime.t(),
+    updated_at: DateTime.t()
+  }
+
   @doc false
   def changeset(user, attrs) do
     user

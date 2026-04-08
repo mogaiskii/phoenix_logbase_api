@@ -17,7 +17,7 @@ defmodule PhoenixLogbaseApiWeb.UserJSON do
     build_success(%{user: data(user)}, links)
   end
 
-  defp data(%User{} = user) do
+  def data(%User{} = user) do
     %{
       id: user.id,
       username: user.username,

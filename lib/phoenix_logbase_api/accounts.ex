@@ -7,6 +7,7 @@ defmodule PhoenixLogbaseApi.Accounts do
   alias PhoenixLogbaseApi.Repo
 
   alias PhoenixLogbaseApi.Accounts.User
+  import PhoenixLogbaseApiWeb.PasswordHelper, only: [hash_password: 1]
 
   @doc """
   Returns the list of users.
@@ -17,6 +18,7 @@ defmodule PhoenixLogbaseApi.Accounts do
       [%User{}, ...]
 
   """
+  @spec list_users :: [User.t()]
   def list_users do
     Repo.all(User)
   end
@@ -35,7 +37,15 @@ defmodule PhoenixLogbaseApi.Accounts do
       ** (Ecto.NoResultsError)
 
   """
+  @spec get_user!(binary()) :: User.t()
   def get_user!(id), do: Repo.get!(User, id)
+
+  @spec get_user(binary()) :: User.t() | nil
+  def get_user(id), do: Repo.get(User, id)
+
+  @spec get_user_by_username(String.t()) :: User.t() | nil
+  def get_user_by_username(username), do: Repo.get_by(User, username: username)
+
 
   @doc """
   Creates a user.
@@ -74,24 +84,10 @@ defmodule PhoenixLogbaseApi.Accounts do
   end
 
   defp with_password(%{password: password} = attrs) do
-    hash = Pbkdf2.hash_pwd_salt(password)
+    hash = hash_password(password)
     attrs |> Map.delete(:password) |> Map.put(:password_hash, hash)
   end
   defp with_password(attrs), do: attrs
-
-  @doc """
-  Verifies a user's password.
-  """
-  def verify_password(%User{} = user, password) do
-    Pbkdf2.verify_pass(password, user.password_hash)
-  end
-
-  @doc """
-  Performs a dry run of the password hashing function to mitigate timing attacks.
-  """
-  def dry_run_password() do
-    Pbkdf2.no_user_verify()
-  end
 
   @doc """
   Deletes a user.

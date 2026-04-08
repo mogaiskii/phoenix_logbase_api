@@ -16,6 +16,12 @@ defmodule PhoenixLogbaseApiWeb.FallbackController do
   def call(conn, {:error, :not_found}), do: render_errors(conn, ErrorTypes.not_found())
   def call(conn, {:error, %Ecto.NoResultsError{}}), do: render_errors(conn, ErrorTypes.not_found())
 
+  def call(conn, {:error, :invalid_token_type}), do: render_errors(conn, ErrorTypes.invalid_token())
+  def call(conn, {:error, :invalid_token}), do: render_errors(conn, ErrorTypes.invalid_token())
+  def call(conn, {:error, :invalid_password}), do: render_errors(conn, ErrorTypes.invalid_password())
+
+  def call(conn, _opts), do: render_errors(conn, ErrorTypes.unexpected_error())
+
   @spec handle_errors(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def handle_errors(conn, %{kind: :error, reason: %Ecto.NoResultsError{}}), do: render_errors(conn, ErrorTypes.not_found())
   def handle_errors(conn, %{kind: :error, reason: %{message: msg}}), do: render_errors(conn, ErrorTypes.unexpected_error(), [msg])
@@ -33,7 +39,7 @@ defmodule PhoenixLogbaseApiWeb.FallbackController do
       "#{api_error.status_code}.json",
       self: conn.request_path || "",
       code: api_error.code,
-      errors: errors || [api_error.message]
+      errors: errors || [%{"message" => api_error.message, "code" => api_error.code}]
       )
   end
 

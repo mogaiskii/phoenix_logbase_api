@@ -20,13 +20,22 @@ defmodule PhoenixLogbaseApiWeb.UserControllerTest do
   @half_correct_attrs %{username: "valid username", email: 123, password: nil}
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    {token, default_user} = auth_fixture()
+    authorized_conn = conn |> put_req_header("accept", "application/json") |> put_req_header("authorization", "Bearer #{token}")
+    {:ok, conn: authorized_conn, default_user: default_user}
   end
 
   describe "index" do
-    test "lists all users", %{conn: conn} do
+    test "lists all users", %{conn: conn, default_user: default_user} do
       conn = get(conn, ~p"/api/v1/users")
-      assert json_response(conn, 200)["response"]["users"] == []
+      assert json_response(conn, 200)["response"]["users"] == [%{
+               "id" => default_user.id,
+               "email" => default_user.email,
+               "username" => default_user.username
+             }]
+      user_fixture()
+      conn = get(conn, ~p"/api/v1/users")
+      assert Enum.count(json_response(conn, 200)["response"]["users"]) == 2, "After creating a second user, the index endpoint should return 2 users in the response"
     end
   end
 

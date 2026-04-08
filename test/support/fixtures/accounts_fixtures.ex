@@ -3,6 +3,7 @@ defmodule PhoenixLogbaseApi.AccountsFixtures do
   This module defines test helpers for creating
   entities via the `PhoenixLogbaseApi.Accounts` context.
   """
+  alias PhoenixLogbaseApi.Accounts.Auth
 
   @doc """
   Generate a user.
@@ -18,5 +19,11 @@ defmodule PhoenixLogbaseApi.AccountsFixtures do
       |> PhoenixLogbaseApi.Accounts.create_user()
 
     user
+  end
+
+  def auth_fixture(attrs \\ %{}) do
+    with user <- user_fixture(attrs) do
+      {Auth.generate_token(user), user}
+    end
   end
 end
