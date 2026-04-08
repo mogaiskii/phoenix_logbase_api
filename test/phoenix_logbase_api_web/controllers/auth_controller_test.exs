@@ -12,13 +12,17 @@ defmodule PhoenixLogbaseApiWeb.AuthControllerTest do
   end
 
   describe "user_authorization" do
-    test "authenticates user and returns token when credentials are valid", %{conn: conn} do
+    test "authenticates user and returns token when credentials are valid", %{conn: initial_conn} do
       user = user_fixture(password_hash: hash_password("validpassword"))
-      conn = post(conn, ~p"/api/v1/auth/login", %{username: user.username, password: "validpassword"})
+      conn = post(initial_conn, ~p"/api/v1/auth/login", %{username: user.username, password: "validpassword"})
       assert %{"code" => 0, "links" => %{"self" => "/api/v1/auth/login"}, "response" => %{"refreshToken" => refresh_token, "token" => token, "user" => user_data}} = json_response(conn, 200), "Status code must be 200, response must contain a token, refresh token and self link to the endpoint"
       assert is_binary(token) and byte_size(token) > 0, "Token must be a non-empty string"
       assert is_binary(refresh_token) and byte_size(refresh_token) > 0, "Refresh token must be a non-empty string"
       assert user_data == %{"id" => user.id, "email" => user.email, "username" => user.username}, "Response must contain the authenticated user's data"
+      conn = initial_conn
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> get(~p"/api/v1/users")
+      assert %{"code" => 0, "links" => %{"self" => "/api/v1/users"}, "response" => _response} = json_response(conn, 200)
     end
 
     test "returns error when credentials are invalid", %{conn: conn} do
@@ -70,14 +74,19 @@ defmodule PhoenixLogbaseApiWeb.AuthControllerTest do
   end
 
   describe "refresh_token" do
-    test "refreshes token when refresh token is valid", %{conn: conn} do
+    test "refreshes token when refresh token is valid", %{conn: initial_conn} do
       {_, user} = auth_fixture()
       token = Auth.generate_refresh_token(user)
       url = ~p"/api/v1/auth/refresh"
-      conn = post(conn, url, %{refreshToken: token})
+      conn = post(initial_conn, url, %{refreshToken: token})
       assert %{"code" => 0, "links" => %{"self" => "/api/v1/auth/refresh"}, "response" => %{"token" => new_token}} = json_response(conn, 200), "Status code must be 200 for successful token refresh, response must contain new token and self link to the endpoint"
       assert is_binary(new_token) and byte_size(new_token) > 0, "New token must be a non-empty string"
       assert new_token != token, "New token must be different from the old token"
+
+      conn = initial_conn
+        |> put_req_header("authorization", "Bearer #{new_token}")
+        |> get(~p"/api/v1/users")
+      assert %{"code" => 0, "links" => %{"self" => "/api/v1/users"}, "response" => _response} = json_response(conn, 200)
     end
 
     test "returns error when refresh token is of invalid type", %{conn: conn} do
@@ -103,6 +112,45 @@ defmodule PhoenixLogbaseApiWeb.AuthControllerTest do
       assert %{"code" => 20000, "errors" => errors, "links" => %{"self" => ^url}} = json_response(conn, 400), "Status code must be 400 for bad request, error code must be 20000 for validation errors, and response must contain self link to the endpoint"
       assert Enum.count(errors) == 1, "There must be exactly one validation error for missing refresh token"
       assert Enum.at(errors, 0)["message"] == "Missing required field 'refresh_token'", "Error message must indicate that the refreshToken field is required"
+    end
+  end
+
+  describe "user_totp_2fa" do
+    test "happy path", %{conn: initial_conn} do
+      secret = NimbleTOTP.secret()
+      user = user_fixture(password_hash: hash_password("validpassword"), totp_enabled: true, totp_secret: Base.encode32(secret))
+      conn = post(initial_conn, ~p"/api/v1/auth/login", %{username: user.username, password: "validpassword"})
+      assert %{
+        "code" => 0, "links" => %{"self" => "/api/v1/auth/login", "next" => "/api/v1/auth/login/code"}, "response" => %{"tempToken" => token}
+        } = json_response(conn, 200), "Status code must be 200 for successful login first step, response must contain new token, refresh token, and link to self and next action"
+
+      conn = initial_conn
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> get(~p"/api/v1/users")
+      assert _response = json_response(conn, 401), "Temp token must not be valid for routes other than login/code"
+
+      code = NimbleTOTP.verification_code(secret)
+      conn = initial_conn
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> post(~p"/api/v1/auth/login/code", %{code: code})
+      assert %{
+        "code" => 0,
+        "links" => %{"self" => "/api/v1/auth/login/code"},
+        "response" => %{"token" => token, "refreshToken" => refresh_token}
+        } = json_response(conn, 200), "Status code must be 200 for successful code login, response must contain new token, refresh token, and link to self"
+
+      conn = initial_conn
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> get(~p"/api/v1/users")
+      assert %{"code" => 0, "links" => %{"self" => "/api/v1/users"}, "response" => _response} = json_response(conn, 200), "Status code must be 200 after successful login"
+
+      conn = post(conn, ~p"/api/v1/auth/refresh", %{refreshToken: refresh_token})
+      assert %{"code" => 0, "links" => %{"self" => "/api/v1/auth/refresh"}, "response" => %{"token" => new_token}} = json_response(conn, 200)
+
+      conn = initial_conn
+        |> put_req_header("authorization", "Bearer #{new_token}")
+        |> get(~p"/api/v1/users")
+      assert %{"code" => 0, "links" => %{"self" => "/api/v1/users"}, "response" => _response} = json_response(conn, 200)
     end
   end
 

@@ -11,4 +11,8 @@ defmodule PhoenixLogbaseApiWeb.AuthJSON do
     build_success(%{token: token}, links)
   end
 
+  def temp_login(%{token: token, links: links}) do
+    build_success(%{temp_token: token}, links)
+  end
+
 end

@@ -53,6 +53,11 @@ defmodule PhoenixLogbaseApi.Accounts.Auth do
     token
   end
 
+  def generate_temprorary_token(user) do
+    {:ok, token, _claims} = encode_and_sign(%{id: user.id}, %{}, token_type: "temp", ttl: Application.get_env(:phoenix_logbase_api, __MODULE__)[:temp_token_expiry])
+    token
+  end
+
   def generate_token_pair(user) do
     {generate_token(user), generate_refresh_token(user)}
   end

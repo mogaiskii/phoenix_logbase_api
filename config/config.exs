@@ -29,8 +29,9 @@ config :phoenix_logbase_api, PhoenixLogbaseApi.Guardian,
   ttl: {1, :hour}
 
 config :phoenix_logbase_api, PhoenixLogbaseApi.Accounts.Auth,
-issuer: "phoenix_logbase_api",
-  refresh_token_expiry: {1, :day}
+  issuer: "phoenix_logbase_api",
+  refresh_token_expiry: {1, :day},
+  temp_token_expiry: {5, :minutes}
 
 # Configure Elixir's Logger
 config :logger, :default_formatter,

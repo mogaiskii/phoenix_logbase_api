@@ -22,6 +22,7 @@ defmodule PhoenixLogbaseApiWeb.Router do
     get "/ping", PingController, :ping
     post "/v1/auth/login", AuthController, :login
     post "/v1/auth/refresh", AuthController, :refresh
+    post "/v1/auth/login/code", AuthController, :login_code
 
     scope "/v1" do
       pipe_through :authorize
